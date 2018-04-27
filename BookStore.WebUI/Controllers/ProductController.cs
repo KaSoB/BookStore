@@ -1,15 +1,31 @@
 ﻿using BookStore.Domain.Abstract;
+using BookStore.WebUI.Models;
+using System.Linq;
 using System.Web.Mvc;
 
 namespace BookStore.WebUI.Controllers {
     public class ProductController : Controller {
-        private readonly IProductRepository productRepository;
+        private readonly IProductRepository repository;
+        public int PageSize = 4;
 
-        public ProductController(IProductRepository productRepository) {
-            this.productRepository = productRepository;
+        public ProductController(IProductRepository repository) {
+            this.repository = repository;
         }
         // GET: Product
-        public ActionResult List() =>
-            View(productRepository.Products);
+        public ViewResult List(int page = 1) {
+            ProductsListViewModel model = new ProductsListViewModel {
+                Products = repository.Products
+                .OrderBy(p => p.ProductID)
+                .Skip((page - 1) * PageSize)
+                .Take(PageSize),
+                PagingInfo = new PagingInfo {
+                    CurrentPage = page,
+                    ItemsPerPage = PageSize,
+                    TotalItems = repository.Products.Count()
+                }
+            };
+            return View(model);
+        }
+
     }
 }
