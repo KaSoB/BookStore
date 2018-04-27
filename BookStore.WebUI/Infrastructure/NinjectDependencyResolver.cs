@@ -1,6 +1,5 @@
 ﻿using BookStore.Domain.Abstract;
-using BookStore.Domain.Entities;
-using Moq;
+using BookStore.Domain.Concrete;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -25,13 +24,7 @@ namespace BookStore.WebUI.Infrastructure {
         }
 
         private void AddBindings() {
-            Mock<IProductRepository> mock = new Mock<IProductRepository>();
-            mock.Setup(m => m.Products).Returns(new List<Product> {
-                new Product {Name="Name1", Price=10 },
-                new Product {Name="Name2", Price=20 },
-                new Product {Name="Name3", Price=30 }
-            });
-            kernel.Bind<IProductRepository>().ToConstant(mock.Object);
+            kernel.Bind<IProductRepository>().To<EFProductRepository>();
         }
 
     }
