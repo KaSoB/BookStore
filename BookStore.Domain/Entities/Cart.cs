@@ -25,6 +25,10 @@ namespace BookStore.Domain.Entities {
         public decimal ComputeTotalValue() {
             return lineCollection.Sum(e => e.Product.Price * e.Quantity);
         }
+        // TODO: Tests
+        public int ComputeTotalQuantities() {
+            return lineCollection.Sum(e => e.Quantity);
+        }
         public IEnumerable<CartLine> Lines {
             get { return lineCollection; }
         }
