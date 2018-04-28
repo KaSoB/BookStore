@@ -6,6 +6,7 @@ using BookStore.WebUI.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -110,6 +111,71 @@ namespace BookStore.UnitTests {
             Assert.IsTrue(result[0].Name == "P2" && result[0].Category == "Cat2");
             Assert.IsTrue(result[1].Name == "P4" && result[1].Category == "Cat2");
         }
+        [TestMethod]
+        public void CanCreateCategories() {
+            //Arrange
+            Mock<IProductRepository> mock = new Mock<IProductRepository>();
+            mock.Setup(m => m.Products)
+                .Returns(new[] {
+                    new Product {ProductID = 1, Name = "P1", Category = "Cat1"},
+                    new Product {ProductID = 2, Name = "P2", Category = "Cat2"},
+                    new Product {ProductID = 3, Name = "P3", Category = "Cat3"},
+                    new Product {ProductID = 4, Name = "P4", Category = "Cat2"},
+                    new Product {ProductID = 5, Name = "P5", Category = "Cat1"}
+                });
+            //Act
+            NavController target = new NavController(mock.Object);
 
+            string[] results = ((IEnumerable<string>) target.Menu().Model).ToArray();
+
+            //Assert
+            Assert.AreEqual(results.Length, 3);
+            Assert.AreEqual(results[0], "Cat1");
+            Assert.AreEqual(results[1], "Cat2");
+            Assert.AreEqual(results[2], "Cat3");
+
+        }
+
+        [TestMethod]
+        public void IndicatesSelectedCategory() {
+            Mock<IProductRepository> mock = new Mock<IProductRepository>();
+            mock.Setup(m => m.Products).Returns(new[] {
+                new Product{ProductID=1, Name="P1", Category="Cat1" },
+                new Product{ProductID=4, Name="P2", Category="Cat2" }
+            });
+            NavController target = new NavController(mock.Object);
+
+            string categoryToSelect = "Cat1";
+
+            string result = target.Menu(categoryToSelect).ViewBag.SelectedCategory;
+
+            Assert.AreEqual(categoryToSelect, result);
+        }
+
+        [TestMethod]
+        public void GenerateCategorySpecificProductCount() {
+            Mock<IProductRepository> mock = new Mock<IProductRepository>();
+            mock.Setup(m => m.Products).Returns(new[] {
+                   new Product {ProductID = 1, Name = "P1", Category = "Cat1"},
+                    new Product {ProductID = 2, Name = "P2", Category = "Cat2"},
+                    new Product {ProductID = 3, Name = "P3", Category = "Cat3"},
+                    new Product {ProductID = 4, Name = "P4", Category = "Cat2"},
+                    new Product {ProductID = 5, Name = "P5", Category = "Cat1"}
+            });
+            ProductController target = new ProductController(mock.Object) {
+                PageSize = 3
+            };
+
+            int res1 = (target.List("Cat1").Model as ProductsListViewModel).PagingInfo.TotalItems;
+            int res2 = (target.List("Cat2").Model as ProductsListViewModel).PagingInfo.TotalItems;
+            int res3 = (target.List("Cat3").Model as ProductsListViewModel).PagingInfo.TotalItems;
+            int resALL = (target.List(null).Model as ProductsListViewModel).PagingInfo.TotalItems;
+
+
+            Assert.AreEqual(res1, 2);
+            Assert.AreEqual(res2, 2);
+            Assert.AreEqual(res3, 1);
+            Assert.AreEqual(resALL, 5);
+        }
     }
 }
