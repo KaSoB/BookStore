@@ -50,7 +50,7 @@ namespace BookStore.Domain.Concrete {
                     mailMessage.BodyEncoding = Encoding.ASCII;
                 }
 
-                smtpClient.Send(mailMessage);
+                // smtpClient.Send(mailMessage); todo:
             }
         }
         private StringBuilder CreateBody(Cart cart, ShippingDetails shippingInfo) {
