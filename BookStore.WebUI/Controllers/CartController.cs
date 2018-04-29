@@ -7,9 +7,11 @@ using System.Web.Mvc;
 namespace BookStore.WebUI.Controllers {
     public class CartController : Controller {
         private readonly IProductRepository repository;
+        private readonly IOrderProcessor orderProcessor;
 
-        public CartController(IProductRepository repository) {
+        public CartController(IProductRepository repository, IOrderProcessor proc) {
             this.repository = repository;
+            this.orderProcessor = proc;
         }
 
         public RedirectToRouteResult AddToCart(Cart cart, int productId, string returnUrl) {
@@ -36,6 +38,20 @@ namespace BookStore.WebUI.Controllers {
         }
         public PartialViewResult Summary(Cart cart) {
             return PartialView(cart);
+        }
+
+        [HttpPost]
+        public ViewResult Checkout(Cart cart, ShippingDetails shippingDetails) {
+            if (cart.Lines.Count() == 0) {
+                ModelState.AddModelError("", "Koszyk jest pusty!");
+            }
+            if (ModelState.IsValid) {
+                orderProcessor.ProcessOrder(cart, shippingDetails);
+                cart.Clear();
+                return View("Completed");
+            } else {
+                return View(shippingDetails);
+            }
         }
     }
 }

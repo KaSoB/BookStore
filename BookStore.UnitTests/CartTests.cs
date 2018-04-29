@@ -103,7 +103,7 @@ namespace BookStore.UnitTests {
 
             Cart cart = new Cart();
 
-            CartController target = new CartController(mock.Object);
+            CartController target = new CartController(mock.Object, null);
 
             target.AddToCart(cart, 1, null);
 
@@ -119,7 +119,7 @@ namespace BookStore.UnitTests {
 
             Cart cart = new Cart();
 
-            CartController target = new CartController(mock.Object);
+            CartController target = new CartController(mock.Object, null);
 
             RedirectToRouteResult result = target.AddToCart(cart, 2, "myUrl");
 
@@ -131,12 +131,75 @@ namespace BookStore.UnitTests {
         public void CanViewCartContents() {
             Cart cart = new Cart();
 
-            CartController target = new CartController(null);
+            CartController target = new CartController(null, null);
 
             CartIndexViewModel result = (CartIndexViewModel) target.Index(cart, "myUrl").ViewData.Model;
 
             Assert.AreEqual(result.Cart, cart);
             Assert.AreEqual(result.ReturnUrl, "myUrl");
+        }
+
+        [TestMethod]
+        public void CannotCheckoutEmptyCart() {
+            Mock<IOrderProcessor> mock = new Mock<IOrderProcessor>();
+            Cart cart = new Cart();
+            ShippingDetails shippingDetails = new ShippingDetails();
+
+            CartController target = new CartController(null, mock.Object);
+
+            ViewResult result = target.Checkout(cart, shippingDetails);
+
+            mock.Verify(m => m.ProcessOrder(It.IsAny<Cart>(), It.IsAny<ShippingDetails>()), Times.Never);
+
+            Assert.AreEqual("", result.ViewName);
+            Assert.AreEqual(false, result.ViewData.ModelState.IsValid);
+        }
+
+        [TestMethod]
+        public void CannotCheckoutInvalidShippingDetails() {
+
+            // przygotowanie - tworzenie imitacji procesora zamówień
+            Mock<IOrderProcessor> mock = new Mock<IOrderProcessor>();
+            // przygotowanie - tworzenie koszyka z produktem
+            Cart cart = new Cart();
+            cart.AddItem(new Product(), 1);
+
+            // przygotowanie - tworzenie egzemplarza kontrolera
+            CartController target = new CartController(null, mock.Object);
+            // przygotowanie - dodanie błędu do modelu
+            target.ModelState.AddModelError("error", "error");
+
+            // działanie - próba zakończenia zamówienia
+            ViewResult result = target.Checkout(cart, new ShippingDetails());
+
+            // asercje - sprawdzenie, czy zamówienie zostało przekazane do procesora
+            mock.Verify(m => m.ProcessOrder(It.IsAny<Cart>(), It.IsAny<ShippingDetails>()),
+                Times.Never());
+            // asercje - sprawdzenie, czy metoda zwraca domyślny widok
+            Assert.AreEqual("", result.ViewName);
+            // asercje - sprawdzenie, czy przekazujemy prawidłowy model do widoku
+            Assert.AreEqual(false, result.ViewData.ModelState.IsValid);
+        }
+        [TestMethod]
+        public void CanCheckoutAndSubmitOrder() {
+            // przygotowanie - tworzenie imitacji procesora zamówień
+            Mock<IOrderProcessor> mock = new Mock<IOrderProcessor>();
+            // przygotowanie - tworzenie koszyka z produktem
+            Cart cart = new Cart();
+            cart.AddItem(new Product(), 1);
+            // przygotowanie - tworzenie egzemplarza kontrolera
+            CartController target = new CartController(null, mock.Object);
+
+            // działanie - próba zakończenia zamówienia
+            ViewResult result = target.Checkout(cart, new ShippingDetails());
+
+            // asercje - sprawdzenie, czy zamówienie nie zostało przekazane do procesora
+            mock.Verify(m => m.ProcessOrder(It.IsAny<Cart>(), It.IsAny<ShippingDetails>()),
+                Times.Once());
+            // asercje - sprawdzenie, czy metoda zwraca widok Completed
+            Assert.AreEqual("Completed", result.ViewName);
+            // asercje - sprawdzenie, czy przekazujemy prawidłowy model do widoku
+            Assert.AreEqual(true, result.ViewData.ModelState.IsValid);
         }
     }
 }
