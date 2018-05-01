@@ -4,6 +4,8 @@ using System.Linq;
 using System.Web.Mvc;
 
 namespace BookStore.WebUI.Controllers {
+
+    [Authorize]
     public class AdminController : Controller {
         private readonly IProductRepository repository;
 

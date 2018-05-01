@@ -1,5 +1,7 @@
 ﻿using BookStore.Domain.Abstract;
 using BookStore.Domain.Concrete;
+using BookStore.WebUI.Infrastructure.Abstract;
+using BookStore.WebUI.Infrastructure.Concrete;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -32,6 +34,8 @@ namespace BookStore.WebUI.Infrastructure {
             };
 
             kernel.Bind<IOrderProcessor>().To<EmailOrderProcessor>().WithConstructorArgument("settings", emailSettings);
+
+            kernel.Bind<IAuthProvider>().To<FormsAuthProvider>();
         }
 
     }

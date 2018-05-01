@@ -2,6 +2,7 @@
 using BookStore.Domain.Entities;
 using BookStore.WebUI.Controllers;
 using BookStore.WebUI.HtmlHelpers;
+using BookStore.WebUI.Infrastructure.Abstract;
 using BookStore.WebUI.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -222,6 +223,46 @@ namespace BookStore.UnitTests {
 
 
             mock.Verify(m => m.DeleteProduct(prod.ProductID));
+        }
+
+        [TestMethod]
+        public void CanLoginWithValidCredentials() {
+
+            Mock<IAuthProvider> mock = new Mock<IAuthProvider>();
+            mock.Setup(m => m.Authenticate("admin", "secret")).Returns(true);
+
+
+            LoginViewModel model = new LoginViewModel() {
+                UserName = "admin",
+                Password = "secret"
+            };
+
+            AccountController target = new AccountController(mock.Object);
+
+            ActionResult result = target.Login(model, "/MyURL");
+
+            Assert.IsInstanceOfType(result, typeof(RedirectResult));
+            Assert.AreEqual("/MyURL", ((RedirectResult) result).Url);
+        }
+
+        [TestMethod]
+        public void CannotLoginWithInvalidCredentials() {
+
+            Mock<IAuthProvider> mock = new Mock<IAuthProvider>();
+            mock.Setup(m => m.Authenticate("user", "invalidPassword")).Returns(false);
+
+
+            LoginViewModel model = new LoginViewModel() {
+                UserName = "user",
+                Password = "invalidPassword"
+            };
+
+            AccountController target = new AccountController(mock.Object);
+
+            ActionResult result = target.Login(model, "/MyURL");
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(((ViewResult) result).ViewData.ModelState.IsValid);
         }
     }
 }
