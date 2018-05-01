@@ -8,6 +8,15 @@ namespace BookStore.Domain.Concrete {
 
         public IEnumerable<Product> Products => context.Products;
 
+        public Product DeleteProduct(int productID) {
+            Product dbEntry = context.Products.Find(productID);
+            if (dbEntry != null) {
+                context.Products.Remove(dbEntry);
+                return dbEntry;
+            }
+            return dbEntry;
+        }
+
         public void SaveProduct(Product product) {
             if (product.ProductID == 0) {
                 context.Products.Add(product);

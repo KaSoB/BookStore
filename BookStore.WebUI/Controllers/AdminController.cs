@@ -35,5 +35,14 @@ namespace BookStore.WebUI.Controllers {
                 return View(product);
             }
         }
+
+        [HttpPost]
+        public ActionResult Delete(int productId) {
+            Product deletedProduct = repository.DeleteProduct(productId);
+            if (deletedProduct != null) {
+                TempData["message"] = string.Format("Usunięto {0} ", deletedProduct.Name);
+            }
+            return RedirectToAction("Index");
+        }
     }
 }
