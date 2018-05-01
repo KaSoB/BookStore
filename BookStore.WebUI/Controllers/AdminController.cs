@@ -15,6 +15,10 @@ namespace BookStore.WebUI.Controllers {
             return View(repository.Products);
         }
 
+        public ViewResult Create() {
+            return View("Edit", new Product());
+        }
+
         public ViewResult Edit(int productId) {
             Product product = repository.Products
                 .FirstOrDefault(p => p.ProductID == productId);

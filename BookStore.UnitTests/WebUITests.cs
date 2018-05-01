@@ -177,5 +177,33 @@ namespace BookStore.UnitTests {
             Assert.AreEqual(res3, 1);
             Assert.AreEqual(resALL, 5);
         }
+
+        [TestMethod]
+        public void CanSaveValidChanges() {
+            Mock<IProductRepository> mock = new Mock<IProductRepository>();
+            AdminController target = new AdminController(mock.Object);
+            Product product = new Product { Name = "Test" };
+
+            ActionResult result = target.Edit(product);
+
+            mock.Verify(m => m.SaveProduct(product));
+
+            Assert.IsNotInstanceOfType(result, typeof(ViewResult));
+        }
+
+        [TestMethod]
+        public void CannotSaveIndalidChanges() {
+            Mock<IProductRepository> mock = new Mock<IProductRepository>();
+            AdminController target = new AdminController(mock.Object);
+            Product product = new Product { Name = "Test" };
+
+            target.ModelState.AddModelError("error", "error");
+
+            ActionResult result = target.Edit(product);
+
+            mock.Verify(m => m.SaveProduct(It.IsAny<Product>()), Times.Never());
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+        }
     }
 }
